@@ -15,10 +15,7 @@ app.use(cors());
 app.use(express.json());
 
 // Connect to MongoDB
-mongoose.connect(process.env.MONGODB_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-})
+mongoose.connect(process.env.MONGODB_URI)
   .then(() => console.log('MongoDB connected'))
   .catch((error) => console.error('MongoDB connection error:', error));
 
@@ -60,17 +57,19 @@ const PayAfterPlacement = mongoose.model('PayAfterPlacement', payAfterPlacementS
 
 // POST route to handle Pay After Placement submissions
 app.post('/payafterplacement', async (req, res) => {
-  const { fullName, mobile } = req.body;
-
   try {
-    const newPayAfterPlacement = new PayAfterPlacement({ fullName, mobile });
-    await newPayAfterPlacement.save();
-    res.status(201).json({ success: true, message: 'Details stored successfully!' });
+    const { fullName, mobile } = req.body;
+    console.log('Received:', fullName, mobile); // Log incoming request for debugging
+
+    // Simulate MongoDB save or any operation that might fail
+    const result = await saveDetailsToMongoDB(fullName, mobile);
+    res.status(200).json({ success: true, message: 'Successfully applied' });
   } catch (error) {
-    console.error('Error saving Pay After Placement details:', error);
-    res.status(500).json({ success: false, message: 'Error storing details' });
+    console.error('Server error:', error); // Log the actual error on the server
+    res.status(500).json({ success: false, message: 'Internal server error' });
   }
 });
+
 
 
 // Start the server
