@@ -60,7 +60,7 @@ app.post('/create-order', async (req, res) => {
     mobileNumber: mobileNumber,
     amount: amount * 100,  // Convert to smallest currency unit (paise)
     merchantTransactionId: orderId,
-    redirectUrl: 'https://api-preprod.phonepe.com/apis/pg-sandbox/pg/v1/pay',
+    redirectUrl: `${redirectUrl}?id=${orderId}`,
     redirectMode: 'POST',
     paymentInstrument: {
       type: 'PAY_PAGE',
