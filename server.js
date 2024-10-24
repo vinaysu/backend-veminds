@@ -60,7 +60,7 @@ app.post('/create-order', async (req, res) => {
     mobileNumber: mobileNumber,
     amount: amount * 100,  // Convert to smallest currency unit (paise)
     merchantTransactionId: orderId,
-    redirectUrl: `${redirectUrl}?id=${orderId}`,
+    redirectUrl: 'https://api.phonepe.com/apis/hermes/pg/v1/pay',
     redirectMode: 'POST',
     paymentInstrument: {
       type: 'PAY_PAGE',
