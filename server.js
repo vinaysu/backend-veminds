@@ -16,16 +16,17 @@ app.use(cors());
 app.use(express.json());
 
 // PhonePe Configurations
-const MERCHANT_KEY = process.env.MERCHANT_KEY;  // Salt Key
-const MERCHANT_ID = process.env.MERCHANT_ID;  // Merchant ID
+const MERCHANT_KEY = "f5d4028a-34a1-4782-9878-69fa797f9053";  // Original Salt Key
+const MERCHANT_ID = "VEMONLINE";  // Original Merchant ID
 
-const MERCHANT_BASE_URL = "https://api-preprod.phonepe.com/apis/pg-sandbox/pg/v1/pay";  // Use preprod for testing
-const MERCHANT_STATUS_URL = "https://api-preprod.phonepe.com/apis/hermes/pg/v1/status";  // Use appropriate URL for status check
+const MERCHANT_BASE_URL = "https://api.phonepe.com/apis/hermes/pg/v1/pay";  // Production URL
+const MERCHANT_STATUS_URL = "https://api.phonepe.com/apis/hermes/pg/v1/status";  // Status URL
 
 // Redirect URLs
 const redirectUrl = "https://backend-veminds.onrender.com/status";  // Actual backend URL
 const successUrl = "https://www.veminds.com/payment-success";  // Success page
 const failureUrl = "https://www.veminds.com/payment-failure";  // Failure page
+
 
 // MongoDB connection
 mongoose.connect(process.env.MONGODB_URI, {
@@ -59,17 +60,18 @@ app.post('/pg/v1/pay', async (req, res) => {
     mobileNumber: mobileNumber,
     amount: amount * 100,  // Convert to smallest currency unit (paise)
     merchantTransactionId: orderId,
-    redirectUrl: redirectUrl,  // Use defined redirect URL
-    redirectMode: 'REDIRECT',  // Adjust to REDIRECT as per PhonePe requirement
+    redirectUrl: `${redirectUrl}?id=${orderId}`,
+    redirectMode: 'POST',
     paymentInstrument: {
       type: 'PAY_PAGE',
     },
   };
 
   const payload = Buffer.from(JSON.stringify(paymentPayload)).toString('base64');
+  const keyIndex = 1;
   const string = payload + '/pg/v1/pay' + MERCHANT_KEY;
   const sha256 = crypto.createHash('sha256').update(string).digest('hex');
-  const checksum = sha256 + '###' + 1; // Assuming salt key index is 1
+  const checksum = sha256 + '###' + keyIndex;
 
   const option = {
     method: 'POST',
@@ -86,21 +88,23 @@ app.post('/pg/v1/pay', async (req, res) => {
 
   try {
     const response = await axios.request(option);
-    console.log(response.data.data.instrumentResponse.redirectInfo.url);
-    res.status(200).json({ msg: "OK", url: response.data.data.instrumentResponse.redirectInfo.url });
+    console.log(response.data.data.instrumentResponse.redirectInfo.url)
+    res.status(200).json({ msg: "OK", url: response.data.data.instrumentResponse.redirectInfo.url })
   } catch (error) {
-    console.error("Error in payment:", error.response ? error.response.data : error.message);
+    console.error("Error in payment:", error);
     res.status(500).json({ error: 'Failed to initiate payment' });
   }
+
 });
 
 // Status check route
 app.post('/status', async (req, res) => {
   const merchantTransactionId = req.query.id;
 
+  const keyIndex = 1;
   const string = `/pg/v1/status/${MERCHANT_ID}/${merchantTransactionId}` + MERCHANT_KEY;
   const sha256 = crypto.createHash('sha256').update(string).digest('hex');
-  const checksum = sha256 + '###' + 1; // Assuming salt key index is 1
+  const checksum = sha256 + '###' + keyIndex;
 
   const option = {
     method: 'GET',
@@ -121,7 +125,7 @@ app.post('/status', async (req, res) => {
       return res.redirect(failureUrl);
     }
   } catch (error) {
-    console.error('Error checking payment status:', error.response ? error.response.data : error.message);
+    console.error('Error checking payment status:', error);
     res.status(500).json({ error: 'Failed to check payment status' });
   }
 });
