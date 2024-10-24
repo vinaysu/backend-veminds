@@ -16,13 +16,14 @@ app.use(cors());
 app.use(express.json());
 
 // PhonePe Configurations
-const MERCHANT_KEY = "f5d4028a-34a1-4782-9878-69fa797f9053";  // Update this with your key
-const MERCHANT_ID = "VEMONLINE";
+const MERCHANT_KEY = "96434309-7796-489d-8924-ab56988a6076"
+const MERCHANT_ID = "PGTESTPAYUAT86"
+
 const MERCHANT_BASE_URL = "https://api-preprod.phonepe.com/apis/pg-sandbox/pg/v1/pay";
 const MERCHANT_STATUS_URL = "https://api-preprod.phonepe.com/apis/pg-sandbox/pg/v1/status";
 
 // Redirect URLs
-const redirectUrl = "https://www.veminds.com/status";  // Make sure this is your actual URL
+const redirectUrl = "https://backend-veminds.onrender.com/status";  // Make sure this is your actual URL
 const successUrl = "https://www.veminds.com/payment-success";
 const failureUrl = "https://www.veminds.com/payment-failure";
 
@@ -71,7 +72,7 @@ app.post('/create-order', async (req, res) => {
   const sha256 = crypto.createHash('sha256').update(string).digest('hex');
   const checksum = sha256 + '###' + keyIndex;
 
-  const options = {
+  const option = {
     method: 'POST',
     url: MERCHANT_BASE_URL,
     headers: {
@@ -85,8 +86,9 @@ app.post('/create-order', async (req, res) => {
   };
 
   try {
-    const response = await axios.request(options);
-    res.status(200).json({ msg: "OK", url: response.data.data.instrumentResponse.redirectInfo.url });
+    const response = await axios.request(option);
+    console.log(response.data.data.instrumentResponse.redirectInfo.url)
+    res.status(200).json({ msg: "OK", url: response.data.data.instrumentResponse.redirectInfo.url })
   } catch (error) {
     console.error("Error in payment:", error);
     res.status(500).json({ error: 'Failed to initiate payment' });
@@ -102,7 +104,7 @@ app.post('/status', async (req, res) => {
   const sha256 = crypto.createHash('sha256').update(string).digest('hex');
   const checksum = sha256 + '###' + keyIndex;
 
-  const options = {
+  const option = {
     method: 'GET',
     url: `${MERCHANT_STATUS_URL}/${MERCHANT_ID}/${merchantTransactionId}`,
     headers: {
@@ -114,7 +116,7 @@ app.post('/status', async (req, res) => {
   };
 
   try {
-    const response = await axios.request(options);
+    const response = await axios.request(option);
     if (response.data.success) {
       return res.redirect(successUrl);
     } else {
