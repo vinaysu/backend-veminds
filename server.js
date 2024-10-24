@@ -1,8 +1,10 @@
-// server.js
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const dotenv = require('dotenv');
+const axios = require('axios');
+const crypto = require('crypto');
+const { v4: uuidv4 } = require('uuid');
 
 dotenv.config();
 
@@ -11,20 +13,29 @@ const PORT = process.env.PORT || 5000;
 
 // Middleware
 app.use(cors());
-
 app.use(express.json());
 
-// Connect to MongoDB
+// PhonePe Configurations
+const MERCHANT_KEY = "f5d4028a-34a1-4782-9878-69fa797f9053";  // Update this with your key
+const MERCHANT_ID = "VEMONLINE";
+const MERCHANT_BASE_URL = "https://api-preprod.phonepe.com/apis/pg-sandbox/pg/v1/pay";
+const MERCHANT_STATUS_URL = "https://api-preprod.phonepe.com/apis/pg-sandbox/pg/v1/status";
+
+// Redirect URLs
+const redirectUrl = "https://www.veminds.com/status";  // Make sure this is your actual URL
+const successUrl = "https://www.veminds.com/payment-success";
+const failureUrl = "https://www.veminds.com/payment-failure";
+
+// MongoDB connection
 mongoose.connect(process.env.MONGODB_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
-  serverSelectionTimeoutMS: 30000 // 30 seconds timeout
+  serverSelectionTimeoutMS: 30000,
 })
   .then(() => console.log('MongoDB connected'))
   .catch((error) => console.error('MongoDB connection error:', error));
 
-
-// Define a User Schema
+// User Schema
 const userSchema = new mongoose.Schema({
   firstName: String,
   lastName: String,
@@ -36,7 +47,86 @@ const userSchema = new mongoose.Schema({
 
 const User = mongoose.model('User', userSchema);
 
-// POST route to handle registration
+// Payment route
+app.post('/create-order', async (req, res) => {
+  const { name, mobileNumber, amount } = req.body;
+  const orderId = uuidv4();  // Generate a unique order ID
+
+  const paymentPayload = {
+    merchantId: MERCHANT_ID,
+    merchantUserId: name,
+    mobileNumber: mobileNumber,
+    amount: amount * 100,  // Convert to smallest currency unit (paise)
+    merchantTransactionId: orderId,
+    redirectUrl: `${redirectUrl}?id=${orderId}`,
+    redirectMode: 'POST',
+    paymentInstrument: {
+      type: 'PAY_PAGE',
+    },
+  };
+
+  const payload = Buffer.from(JSON.stringify(paymentPayload)).toString('base64');
+  const keyIndex = 1;
+  const string = payload + '/pg/v1/pay' + MERCHANT_KEY;
+  const sha256 = crypto.createHash('sha256').update(string).digest('hex');
+  const checksum = sha256 + '###' + keyIndex;
+
+  const options = {
+    method: 'POST',
+    url: MERCHANT_BASE_URL,
+    headers: {
+      accept: 'application/json',
+      'Content-Type': 'application/json',
+      'X-VERIFY': checksum,
+    },
+    data: {
+      request: payload,
+    },
+  };
+
+  try {
+    const response = await axios.request(options);
+    res.status(200).json({ msg: "OK", url: response.data.data.instrumentResponse.redirectInfo.url });
+  } catch (error) {
+    console.error("Error in payment:", error);
+    res.status(500).json({ error: 'Failed to initiate payment' });
+  }
+});
+
+// Status check route
+app.post('/status', async (req, res) => {
+  const merchantTransactionId = req.query.id;
+
+  const keyIndex = 1;
+  const string = `/pg/v1/status/${MERCHANT_ID}/${merchantTransactionId}` + MERCHANT_KEY;
+  const sha256 = crypto.createHash('sha256').update(string).digest('hex');
+  const checksum = sha256 + '###' + keyIndex;
+
+  const options = {
+    method: 'GET',
+    url: `${MERCHANT_STATUS_URL}/${MERCHANT_ID}/${merchantTransactionId}`,
+    headers: {
+      accept: 'application/json',
+      'Content-Type': 'application/json',
+      'X-VERIFY': checksum,
+      'X-MERCHANT-ID': MERCHANT_ID,
+    },
+  };
+
+  try {
+    const response = await axios.request(options);
+    if (response.data.success) {
+      return res.redirect(successUrl);
+    } else {
+      return res.redirect(failureUrl);
+    }
+  } catch (error) {
+    console.error('Error checking payment status:', error);
+    res.status(500).json({ error: 'Failed to check payment status' });
+  }
+});
+
+// Registration route
 app.post('/register', async (req, res) => {
   const userData = req.body;
 
@@ -50,7 +140,7 @@ app.post('/register', async (req, res) => {
   }
 });
 
-// Define PayAfterPlacement Schema
+// Pay After Placement Schema and route
 const payAfterPlacementSchema = new mongoose.Schema({
   fullName: String,
   mobile: String,
@@ -58,8 +148,6 @@ const payAfterPlacementSchema = new mongoose.Schema({
 
 const PayAfterPlacement = mongoose.model('PayAfterPlacement', payAfterPlacementSchema);
 
-
-// POST route to handle Pay After Placement submissions
 app.post('/payafterplacement', async (req, res) => {
   const { fullName, mobile } = req.body;
 
@@ -72,7 +160,6 @@ app.post('/payafterplacement', async (req, res) => {
     res.status(500).json({ success: false, message: 'Error storing details' });
   }
 });
-
 
 // Start the server
 app.listen(PORT, () => {
