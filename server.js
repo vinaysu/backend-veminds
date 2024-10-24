@@ -73,27 +73,27 @@ app.post('/create-order', async (req, res) => {
   const sha256 = crypto.createHash('sha256').update(string).digest('hex');
   const checksum = sha256 + '###' + keyIndex;
 
-
-  const axios = require('axios');
-  const options = {
-    method: 'post',
-    url: 'https://api-preprod.phonepe.com/apis/pg-sandbox/pg/v1/pay',
+  const option = {
+    method: 'POST',
+    url: MERCHANT_BASE_URL,
     headers: {
-      accept: 'text/plain',
+      accept: 'application/json',
       'Content-Type': 'application/json',
+      'X-VERIFY': checksum,
     },
     data: {
-    }
+      request: payload,
+    },
   };
-  axios
-    .request(options)
-    .then(function (response) {
-      console.log(response.data);
-    })
-    .catch(function (error) {
-      console.error(error);
-    });
 
+  try {
+    const response = await axios.request(option);
+    console.log(response.data.data.instrumentResponse.redirectInfo.url)
+    res.status(200).json({ msg: "OK", url: response.data.data.instrumentResponse.redirectInfo.url })
+  } catch (error) {
+    console.error("Error in payment:", error);
+    res.status(500).json({ error: 'Failed to initiate payment' });
+  }
 
 });
 
