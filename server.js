@@ -16,16 +16,17 @@ app.use(cors());
 app.use(express.json());
 
 // PhonePe Configurations
-const MERCHANT_KEY = "96434309-7796-489d-8924-ab56988a6076"
-const MERCHANT_ID = "PGTESTPAYUAT86"
+const MERCHANT_KEY = "f5d4028a-34a1-4782-9878-69fa797f9053";  // Original Salt Key
+const MERCHANT_ID = "VEMONLINE";  // Original Merchant ID
 
-const MERCHANT_BASE_URL = "https://api-preprod.phonepe.com/apis/pg-sandbox/pg/v1/pay";
-const MERCHANT_STATUS_URL = "https://api-preprod.phonepe.com/apis/pg-sandbox/pg/v1/status";
+const MERCHANT_BASE_URL = "https://api.phonepe.com/apis/hermes/pg/v1/pay";  // Production URL
+const MERCHANT_STATUS_URL = "https://api.phonepe.com/apis/hermes/pg/v1/status";  // Status URL
 
 // Redirect URLs
-const redirectUrl = "https://backend-veminds.onrender.com/status";  // Make sure this is your actual URL
-const successUrl = "https://www.veminds.com/payment-success";
-const failureUrl = "https://www.veminds.com/payment-failure";
+const redirectUrl = "https://backend-veminds.onrender.com/status";  // Actual backend URL
+const successUrl = "https://www.veminds.com/payment-success";  // Success page
+const failureUrl = "https://www.veminds.com/payment-failure";  // Failure page
+
 
 // MongoDB connection
 mongoose.connect(process.env.MONGODB_URI, {
