@@ -50,7 +50,7 @@ const userSchema = new mongoose.Schema({
 const User = mongoose.model('User', userSchema);
 
 // Payment route
-app.post('/pg/v1/pay', async (req, res) => {
+app.post('/order', async (req, res) => {
   const { name, mobileNumber, amount } = req.body;
   const orderId = uuidv4();  // Generate a unique order ID
 
