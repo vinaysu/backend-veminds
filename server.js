@@ -19,8 +19,8 @@ app.use(express.json());
 const MERCHANT_KEY = "f5d4028a-34a1-4782-9878-69fa797f9053";  // Original Salt Key
 const MERCHANT_ID = "VEMONLINE";  // Original Merchant ID
 
-const MERCHANT_BASE_URL = "https://veminds.com/apis/hermes/pg/v1/pay";  // Production URL
-const MERCHANT_STATUS_URL = "https://veminds.com/apis/hermes/pg/v1/status";  // Status URL
+const MERCHANT_BASE_URL = "https://api.phonepe.com/apis/hermes/pg/v1/pay";  // Production URL
+const MERCHANT_STATUS_URL = "https://api.phonepe.com/apis/hermes/pg/v1/status";  // Status URL
 
 // Redirect URLs
 const redirectUrl = "https://veminds.com/status";  // Updated to match onboarding URL
