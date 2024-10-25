@@ -89,7 +89,6 @@ app.post('/pg/v1/pay', async (req, res) => {
   try {
     const response = await axios.request(option);
     console.log(response.data.data.instrumentResponse.redirectInfo.url)
-    window.alert(`${response.data.data.instrumentResponse.redirectInfo.url}`)
     res.status(200).json({ msg: "OK", url: response.data.data.instrumentResponse.redirectInfo.url })
   } catch (error) {
     console.error("Error in payment:", error);
