@@ -23,10 +23,9 @@ const MERCHANT_BASE_URL = "https://api.phonepe.com/apis/hermes/pg/v1/pay";  // P
 const MERCHANT_STATUS_URL = "https://api.phonepe.com/apis/hermes/pg/v1/status";  // Status URL
 
 // Redirect URLs
-const redirectUrl = "https://backend-veminds.onrender.com/status";  // Actual backend URL
-const successUrl = "https://www.veminds.com/payment-success";  // Success page
-const failureUrl = "https://www.veminds.com/payment-failure";  // Failure page
-
+const redirectUrl = "https://veminds.com/status";  // Updated to match onboarding URL
+const successUrl = "https://veminds.com/payment-success";  // Success page
+const failureUrl = "https://veminds.com/payment-failure";  // Failure page
 
 // MongoDB connection
 mongoose.connect(process.env.MONGODB_URI, {
@@ -88,8 +87,8 @@ app.post('/order', async (req, res) => {
 
   try {
     const response = await axios.request(option);
-    console.log(response.data.data.instrumentResponse.redirectInfo.url)
-    res.status(200).json({ msg: "OK", url: response.data.data.instrumentResponse.redirectInfo.url })
+    console.log(response.data.data.instrumentResponse.redirectInfo.url);
+    res.status(200).json({ msg: "OK", url: response.data.data.instrumentResponse.redirectInfo.url });
   } catch (error) {
     console.error("Error in payment:", error);
     res.status(500).json({ error: 'Failed to initiate payment' });
