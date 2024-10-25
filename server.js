@@ -23,7 +23,7 @@ const MERCHANT_BASE_URL = "https://api.phonepe.com/apis/hermes/pg/v1/pay";  // P
 const MERCHANT_STATUS_URL = "https://api.phonepe.com/apis/hermes/pg/v1/status";  // Status URL
 
 // Redirect URLs
-const redirectUrl = "https://veminds.com/status";  // Updated to match onboarding URL
+const redirectUrl = "https://veminds.com";  // Updated to match onboarding URL
 const successUrl = "https://veminds.com/payment-success";  // Success page
 const failureUrl = "https://veminds.com/payment-failure";  // Failure page
 
